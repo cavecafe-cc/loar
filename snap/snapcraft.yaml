@@ -20,7 +20,7 @@ apps:
   loar:
     command: loar
 
-architectures:
+platforms:
   - build-on: amd64
   - build-on: arm64
 
