@@ -15,7 +15,6 @@ issues: https://github.com/cavecafe-cc/loar/issues
 contact: https://github.com/cavecafe
 website: https://github.com/cavecafe-cc/loar
 license: GPL-3.0
-source-code: https://github.com/cavecafe-cc/loar
 
 apps:
   loar:
@@ -33,12 +32,16 @@ parts:
     source: https://github.com/cavecafe-cc/loar.git
     source-type: git
     source-branch: main
-    plugin: dotnet
+    plugin: nil
     build-snaps:
-      - dotnet-sdk-8.0
-    stage-snaps:
-      - dotnet-runtime-8.0
-    build-environment:
-      - DOTNET_ROOT: $SNAP/usr/share/dotnet
+      - dotnet-sdk
+    build-packages:
+      - make
+      - gcc
+    override-build: |
+      # Initialize .NET SDK
+      dotnet restore
+      dotnet build --configuration Release
+      dotnet publish --configuration Release --output $SNAPCRAFT_PART_INSTALL/
     stage-packages:
-      - dotnet-runtime-8.0
+      - dotnet-runtime
