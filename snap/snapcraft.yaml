@@ -1,12 +1,12 @@
 name: loar
-version: 0.7.0
-adopt-info: loar
-summary: Local Archive Utility (LOAR)
-description: LOAR is a CLI tool to backup local non-tracked files and folder structures
+version: '0.7.0'
 grade: stable
+summary: Local Archive Utility (LOAR)
+description: LOAR is a CLI tool to backup non-tracked files and folder structures
+base: core24
 confinement: strict
 
-base: core24
+adopt-info: loar
 compression: lzo
 icon: loar-logo.png
 type: app
@@ -20,9 +20,9 @@ apps:
   loar:
     command: loar
 
-platforms:
-  amd64: {}
-  arm64: {}
+#platforms:
+#  amd64: {}
+#  arm64: {}
 
 environment:
   DOTNET_ROOT: $SNAP/usr/share/dotnet
@@ -32,17 +32,16 @@ parts:
     source: https://github.com/cavecafe-cc/loar.git
     source-type: git
     source-branch: main
-    plugin: nil
-    build-snaps:
-      - name: dotnet-sdk
-        channel: 8.0/stable
+    plugin: dotnet
+#    build-snaps:
+#      - name: dotnet-sdk-8.0
+#        channel: 8.0/stable
     build-packages:
-      - make
-      - gcc
+      - dotnet-sdk-8.0
+    stage-packages:
+      - dotnet-runtime-8.0
     override-build: |
       # Initialize .NET SDK
       dotnet restore
       dotnet build --configuration Release
       dotnet publish --configuration Release --output $SNAPCRAFT_PART_INSTALL/
-    stage-packages:
-      - dotnet-runtime-8.0
