@@ -3,7 +3,7 @@ version: '0.7.0'
 grade: stable
 summary: Local Archive Utility (LOAR)
 description: LOAR is a CLI tool to backup non-tracked files and folder structures
-base: core24
+base: core22
 confinement: strict
 
 adopt-info: loar
@@ -16,16 +16,15 @@ contact: https://github.com/cavecafe
 website: https://github.com/cavecafe-cc/loar
 license: GPL-3.0
 
+#architectures:
+#  - build-on: amd64
+#  - build-on: arm64
+
 apps:
   loar:
     command: loar
-
-#platforms:
-#  amd64: {}
-#  arm64: {}
-
-environment:
-  DOTNET_ROOT: $SNAP/usr/share/dotnet
+    environment:
+      DOTNET_ROOT: $SNAP/usr/share/dotnet
 
 parts:
   loar:
@@ -33,15 +32,35 @@ parts:
     source-type: git
     source-branch: main
     plugin: dotnet
-#    build-snaps:
-#      - name: dotnet-sdk-8.0
-#        channel: 8.0/stable
+    dotnet-version: 8.0
+    dotnet-build-configuration: Release
+    dotnet-self-contained-runtime-identifier: [linux-x64, osx-x64, osx-arm64, win-x64]
+
+    #    build-snaps:
+    #      - name: dotnet-sdk-8.0
+    #        channel: 8.0/stable
     build-packages:
       - dotnet-sdk-8.0
     stage-packages:
-      - dotnet-runtime-8.0
-    override-build: |
-      # Initialize .NET SDK
-      dotnet restore
-      dotnet build --configuration Release
-      dotnet publish --configuration Release --output $SNAPCRAFT_PART_INSTALL/
+      - libicu70
+
+
+
+#    override-build: |
+#      # Initialize .NET SDK
+#      dotnet restore
+#      dotnet build --configuration Release
+#      dotnet publish --configuration Release --output $SNAPCRAFT_PART_INSTALL/
+
+#      # 4. Build self-contained binaries for each OS
+#      - name: Build for Linux
+#        run: dotnet publish -c Release -r linux-x64 --self-contained --p:PublishTrimmed=true --p:PublishSingleFile=true -o ./output/linux/linux-x64/
+#
+#      - name: Build for Windows
+#        run: dotnet publish -c Release -r win-x64 --self-contained --p:PublishTrimmed=true --p:PublishSingleFile=true -o ./output/windows/win-x64/
+#
+#      - name: Build for macOS (Apple Silicon)
+#        run: dotnet publish -c Release -r osx-arm64 --self-contained --p:PublishTrimmed=true --p:PublishSingleFile=true -o ./output/macos/osx-arm64/
+#
+#      - name: Build for macOS (Intel)
+#        run: dotnet publish -c Release -r osx-x64 --self-contained --p:PublishTrimmed=true --p:PublishSingleFile=true -o ./output/macos/osx-x64/
