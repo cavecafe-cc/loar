@@ -38,8 +38,8 @@ parts:
       dotnet publish loar.csproj -c Release -o $SNAPCRAFT_PART_INSTALL/linux-x64 --self-contained -r linux-x64
     build-packages:
       - dotnet-sdk-8.0
-    stage-packages:
-      - libicu70
+    #stage-packages:
+      #- libicu70
       #- liblttng-ust1
     prime:
       - linux-x64/
