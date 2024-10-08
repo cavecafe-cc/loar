@@ -34,7 +34,8 @@ parts:
     source-branch: main
     plugin: nil
     build-snaps:
-      - dotnet-sdk
+      - name: dotnet-sdk
+        channel: 8.0/stable
     build-packages:
       - make
       - gcc
@@ -44,4 +45,4 @@ parts:
       dotnet build --configuration Release
       dotnet publish --configuration Release --output $SNAPCRAFT_PART_INSTALL/
     stage-packages:
-      - dotnet-runtime
+      - dotnet-runtime-8.0
