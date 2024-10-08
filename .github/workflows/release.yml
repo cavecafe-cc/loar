@@ -1,0 +1,96 @@
+name: Build and Release
+
+on:
+  workflow_dispatch: # allow manual trigger
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*' # only do this on tags that start with 'v'
+
+jobs:
+  build:
+    runs-on: [self-hosted, Linux]
+
+    steps:
+      # 1. Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+#      # 2. Set up .NET
+#      - name: Setup .NET
+#        uses: actions/setup-dotnet@v3
+#        with:
+#          dotnet-version: '8.0.x'
+
+#      - name: Set up .NET Core
+#        run: echo "DOTNET_ROOT=$HOME/.dotnet" >> $GITHUB_ENV
+#        shell: bash
+#
+#      - name: Setup PATH for .NET
+#        run: echo "$HOME/.dotnet/tools" >> $GITHUB_ENV
+#        shell: bash
+
+      # 3. Create a new tag (if not exists)
+      - name: Create Tag
+        id: tag
+        run: |
+          git fetch --tags
+          TAG="v$(date +'%Y%m%d-%H%M%S')"
+          git tag $TAG
+          git push origin $TAG
+          echo "tag=$TAG" >> $GITHUB_ENV
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # 4. Build self-contained binaries for each OS
+      - name: Build for Linux
+        run: dotnet publish -c Release -r linux-x64 --self-contained --p:PublishTrimmed=true --p:PublishSingleFile=true -o ./output/linux/linux-x64/
+
+      - name: Build for Windows
+        run: dotnet publish -c Release -r win-x64 --self-contained --p:PublishTrimmed=true --p:PublishSingleFile=true -o ./output/windows/win-x64/
+
+      - name: Build for macOS (Apple Silicon)
+        run: dotnet publish -c Release -r osx-arm64 --self-contained --p:PublishTrimmed=true --p:PublishSingleFile=true -o ./output/macos/osx-arm64/
+
+      - name: Build for macOS (Intel)
+        run: dotnet publish -c Release -r osx-x64 --self-contained --p:PublishTrimmed=true --p:PublishSingleFile=true -o ./output/macos/osx-x64/
+
+      # 5. Zip output for each OS
+      - name: Zip output (linux-x64)
+        run: |
+          mkdir -p ${{ github.repository }}/linux/linux-x64
+          mv ./output/linux/linux-x64/* ${{ github.repository }}/linux/linux-x64/
+          zip -r ${{ github.repository }}_linux-x64.zip ${{ github.repository }}/linux/linux-x64/
+
+      - name: Zip output (Windows)
+        run: |
+          mkdir -p ${{ github.repository }}/windows/win-x64
+          mv ./output/windows/win-x64/* ${{ github.repository }}/windows/win-x64/
+          zip -r ${{ github.repository }}_win-x64.zip ${{ github.repository }}/windows/win-x64/
+
+      - name: Zip output (macOS Silicon)
+        run: |
+          mkdir -p ${{ github.repository }}/macos/osx-arm64
+          mv ./output/macos/osx-arm64/* ${{ github.repository }}/macos/osx-arm64/
+          zip -r ${{ github.repository }}_osx-arm64.zip ${{ github.repository }}/macos/osx-arm64/
+
+      - name: Zip output (macOS Intel)
+        run: |
+          mkdir -p ${{ github.repository }}/macos/osx-x64
+          mv ./output/macos/osx-x64/* ${{ github.repository }}/macos/osx-x64/
+          zip -r ${{ github.repository }}_osx-x64.zip ${{ github.repository }}/macos/osx-x64/
+
+      # 6. Upload ZIP files to Release
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ${{ github.repository }}_linux-x64.zip
+            ${{ github.repository }}_win-x64.zip
+            ${{ github.repository }}_osx-arm64.zip
+            ${{ github.repository }}_osx-x64.zip
+
+          tag_name: ${{ env.tag }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
