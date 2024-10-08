@@ -15,6 +15,7 @@ issues: https://github.com/cavecafe-cc/loar/issues
 contact: https://github.com/cavecafe
 website: https://github.com/cavecafe-cc/loar
 license: GPL-3.0
+source-code: https://github.com/cavecafe-cc/loar
 
 apps:
   loar:
@@ -26,27 +27,18 @@ platforms:
 
 environment:
   DOTNET_ROOT: $SNAP/usr/share/dotnet
-  #CRAFT_ARCH_TARGET_BUILD_FOR: "amd64,arm64,armhf,riscv64"
-source-code: https://github.com/cavecafe-cc/loar
-build-packages:
-  - dotnet-sdk-8.0
-  - dotnet-runtime-8.0
 
 parts:
   loar:
     source: https://github.com/cavecafe-cc/loar.git
     source-type: git
     source-branch: main
-    # source-tag: snap-store
-    plugin: nil
-    build-packages:
-      - dotnet-sdk-8.0
-    stage-packages:
-      - dotnet-runtime-8.0
-    build-environment:
-      - DOTNET_ROOT: $SNAP/usr/share/dotnet
+    plugin: dotnet
     build-snaps:
       - dotnet-sdk-8.0
     stage-snaps:
       - dotnet-runtime-8.0
-      - loar
+    build-environment:
+      - DOTNET_ROOT: $SNAP/usr/share/dotnet
+    stage-packages:
+      - dotnet-runtime-8.0
