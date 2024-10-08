@@ -41,7 +41,8 @@ parts:
     stage-packages:
       - libicu70
     prime:
-      - linux-x64/
+      - -usr
+      - -snap
 
   loar-osx-arm64:
     source: https://github.com/cavecafe-cc/loar.git
@@ -55,7 +56,8 @@ parts:
     build-packages:
       - dotnet-sdk-8.0
     prime:
-      - osx-arm64/
+      - -usr
+      - -snap
 
   loar-win-x64:
     source: https://github.com/cavecafe-cc/loar.git
@@ -69,4 +71,5 @@ parts:
     build-packages:
       - dotnet-sdk-8.0
     prime:
-      - win-x64/
+      - -usr
+      - -snap
