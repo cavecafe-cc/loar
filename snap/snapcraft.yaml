@@ -34,12 +34,14 @@ parts:
     plugin: dotnet
     dotnet-build-configuration: Release
     dotnet-self-contained-runtime-identifier: linux-x64
+    override-build: |
+      dotnet publish -c Release -o $SNAPCRAFT_PART_INSTALL/linux-x64 --self-contained -r linux-x64
     build-packages:
       - dotnet-sdk-8.0
     stage-packages:
       - libicu70
-    override-build: |
-      dotnet publish -c Release -o $SNAPCRAFT_PART_INSTALL/linux-x64 --self-contained -r linux-x64
+    prime:
+      - linux-x64/
 
   loar-osx-arm64:
     source: https://github.com/cavecafe-cc/loar.git
@@ -48,12 +50,12 @@ parts:
     plugin: dotnet
     dotnet-build-configuration: Release
     dotnet-self-contained-runtime-identifier: osx-arm64
-    build-packages:
-      - dotnet-sdk-8.0
-    stage-packages:
-      - libicu70
     override-build: |
       dotnet publish -c Release -o $SNAPCRAFT_PART_INSTALL/osx-arm64 --self-contained -r osx-arm64
+    build-packages:
+      - dotnet-sdk-8.0
+    prime:
+      - osx-arm64/
 
   loar-win-x64:
     source: https://github.com/cavecafe-cc/loar.git
@@ -62,9 +64,9 @@ parts:
     plugin: dotnet
     dotnet-build-configuration: Release
     dotnet-self-contained-runtime-identifier: win-x64
-    build-packages:
-      - dotnet-sdk-8.0
-    stage-packages:
-      - libicu70
     override-build: |
       dotnet publish -c Release -o $SNAPCRAFT_PART_INSTALL/win-x64 --self-contained -r win-x64
+    build-packages:
+      - dotnet-sdk-8.0
+    prime:
+      - win-x64/
