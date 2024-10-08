@@ -21,8 +21,7 @@ loar <enter>
 
 #### (b) directly from GitHub (if you want to install loar, only for your project)
 1. Download [latest release](https://github.com/cavecafe-cc/loar/releases/latest/), choose ZIP file for your OS and CPU types
-2. From the Release ZIP file, choose the binary at `cavecafe-cc/loar/{your-OS}/{your-CPU-type}/loar` (e.g. for macOS Silicon, `cavecafe-cc/loar/macos/osx-arm64/loar`)
-3. Copy the binary to your project root directory
+2. Unzip it, copy 'loar' to your project root directory
 4. Make the binary as executable by `chmod +x <your project repo root>/loar`
 5. Run it from a root directory of a git repository
 ```bash
