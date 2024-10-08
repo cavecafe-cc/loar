@@ -20,7 +20,7 @@ apps:
   loar:
     command: loar
 
-architectures:
+platforms:
   - build-on: amd64
   - build-on: arm64
 
@@ -50,3 +50,23 @@ parts:
     stage-snaps:
       - dotnet-runtime-8.0
       - loar
+architectures:
+  -
+assumes:
+  -
+frameworks:
+  -
+ua-services:
+  -
+epoch:
+version-script:
+layout:
+slots:
+package-repositories:
+  -
+passthrough:
+plugs:
+donation:
+system-usernames:
+build-base:
+hooks:
