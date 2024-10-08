@@ -32,7 +32,6 @@ parts:
     source-type: git
     source-branch: main
     plugin: dotnet
-    dotnet-version: 8.0
     dotnet-build-configuration: Release
     dotnet-self-contained-runtime-identifier: osx-arm64
     # dotnet-self-contained-runtime-identifier: [linux-x64, osx-x64, osx-arm64, win-x64]
