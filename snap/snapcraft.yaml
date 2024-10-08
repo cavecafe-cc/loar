@@ -41,7 +41,7 @@ parts:
     stage-packages:
       - libicu70
       - liblttng-ust-ctl0
-      - liblttng-ust0
+      - liblttng-ust-dev
     prime:
       - -usr
       - -snap
