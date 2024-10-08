@@ -40,7 +40,6 @@ parts:
       - dotnet-sdk-8.0
     stage-packages:
       - libicu70
-      - liblttng-ust-ctl0
       - liblttng-ust-dev
     prime:
       - -usr
