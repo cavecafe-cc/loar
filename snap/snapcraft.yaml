@@ -17,7 +17,7 @@ website: https://github.com/cavecafe-cc/loar
 license: GPL-3.0
 
 architectures:
-  - build-on: arm64
+  - build-on: amd64
 
 apps:
   loar:
@@ -32,7 +32,7 @@ parts:
     source-branch: main
     plugin: dotnet
     dotnet-build-configuration: Release
-    dotnet-self-contained-runtime-identifier: osx-arm64
+    dotnet-self-contained-runtime-identifier: linux-x64
     #dotnet-target-architecture: arm64
     build-packages:
       - dotnet-sdk-8.0
