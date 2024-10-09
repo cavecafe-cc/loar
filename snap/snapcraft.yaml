@@ -18,6 +18,7 @@ license: GPL-3.0
 
 architectures:
   - build-on: amd64
+  #- build-on: arm64
 
 apps:
   loar:
@@ -32,8 +33,10 @@ parts:
     source-branch: main
     plugin: dotnet
     dotnet-build-configuration: Release
-    dotnet-self-contained-runtime-identifier: linux-x64
-    #dotnet-target-architecture: arm64
+    #dotnet-self-contained-runtime-identifier: osx-arm64
+    #dotnet-self-contained-runtime-identifier: linux-x64
+    dotnet-self-contained-runtime-identifier: win-x64
+    #dotnet-self-contained-runtime-identifier: osx-x64
     build-packages:
       - dotnet-sdk-8.0
     stage-packages:
