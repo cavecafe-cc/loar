@@ -5,7 +5,7 @@ Utility to archive local only stuffs, which is NOT tracked by git, yet don't wan
 ### How to use it:
 
 #### (a) Easy way
-1. Install using ![snap](loar/snap/snap-store-white.svg) (for Ubuntu, Debian, Fedora, CentOS, Arch Linux, Manjaro, openSUSE, Solus, and Zorin OS) 
+1. Install using ![snap](snap-store-white.svg) (for Ubuntu, Debian, Fedora, CentOS, Arch Linux, Manjaro, openSUSE, Solus, and Zorin OS) 
 ```bash
 sudo snap install loar <enter>
 ```
