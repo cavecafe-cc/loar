@@ -41,7 +41,10 @@ jobs:
           git push origin $TAG
           echo "tag=$TAG" >> $GITHUB_ENV
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          #GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          #GITHUB_REPOSITORY: ${{ github.repository }}
+          #GITHUB_OWNER: ${{ github.repository_owner }}
+          #REPO_NAME: ${{ github.event.repository.name }}
 
       # 4. Build self-contained binaries for each OS
       - name: Build for Linux
@@ -56,32 +59,48 @@ jobs:
       - name: Build for macOS (Intel)
         run: dotnet publish -c Release -r osx-x64 --self-contained --p:PublishTrimmed=true --p:PublishSingleFile=true -o ./output/macos/osx-x64/
 
-      # 5. Zip output for each OS
+      # 5. Verify variables
+      - name: Verify variables
+        run: |
+          echo "Repository: '${{ github.repository }}'"
+          echo "Repo Name: '${{ github.event.repository.name }}'"
+          echo "Owner: '${{ github.repository_owner }}'"
+          echo "Tag: '${{ env.tag }}'"
+
+      # 6. Zip output for each OS
       - name: Zip output (linux-x64)
         run: |
           mkdir -p ${{ github.repository }}/linux/linux-x64
-          mv ./output/linux/linux-x64/* ${{ github.repository }}/linux/linux-x64/
+          mv ./output/linux/linux-x64/${{ github.repository_owner }}/${{ github.repository }}/* ${{ github.repository }}/linux/linux-x64/
           zip -r ${{ github.repository }}_linux-x64.zip ${{ github.repository }}/linux/linux-x64/
+          SHA256=$(shasum -a 256 ${{ github.repository }}_linux-x64.zip | awk '{ print $1 }')
+          echo "SHA256: $SHA256"
 
       - name: Zip output (Windows)
         run: |
           mkdir -p ${{ github.repository }}/windows/win-x64
-          mv ./output/windows/win-x64/* ${{ github.repository }}/windows/win-x64/
+          mv ./output/windows/win-x64/${{ github.repository_owner }}/${{ github.repository }}/* ${{ github.repository }}/windows/win-x64/
           zip -r ${{ github.repository }}_win-x64.zip ${{ github.repository }}/windows/win-x64/
+          SHA256=$(shasum -a 256 ${{ github.repository }}_win-x64.zip | awk '{ print $1 }')
+          echo "SHA256: $SHA256"
 
       - name: Zip output (macOS Silicon)
         run: |
           mkdir -p ${{ github.repository }}/macos/osx-arm64
-          mv ./output/macos/osx-arm64/* ${{ github.repository }}/macos/osx-arm64/
+          mv ./output/macos/osx-arm64/${{ github.repository_owner }}/${{ github.repository }}/* ${{ github.repository }}/macos/osx-arm64/
           zip -r ${{ github.repository }}_osx-arm64.zip ${{ github.repository }}/macos/osx-arm64/
+          SHA256=$(shasum -a 256 ${{ github.repository }}_osx-arm64.zip | awk '{ print $1 }')
+          echo "SHA256: $SHA256"
 
       - name: Zip output (macOS Intel)
         run: |
           mkdir -p ${{ github.repository }}/macos/osx-x64
-          mv ./output/macos/osx-x64/* ${{ github.repository }}/macos/osx-x64/
+          mv ./output/macos/osx-x64/${{ github.repository_owner }}/${{ github.repository }}/* ${{ github.repository }}/macos/osx-x64/
           zip -r ${{ github.repository }}_osx-x64.zip ${{ github.repository }}/macos/osx-x64/
+          SHA256=$(shasum -a 256 ${{ github.repository }}_osx-x64.zip | awk '{ print $1 }')
+          echo "SHA256: $SHA256"
 
-      # 6. Upload ZIP files to Release
+      # 7. Upload ZIP files to Release
       - name: Upload Release Asset
         uses: softprops/action-gh-release@v2
         with:
