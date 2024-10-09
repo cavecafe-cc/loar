@@ -27,22 +27,22 @@ apps:
       DOTNET_ROOT: $SNAP/usr/share/dotnet
 
 parts:
-  loar-linux-x64:
-    source: https://github.com/cavecafe-cc/loar.git
-    source-type: git
-    source-branch: main
-    plugin: dotnet
-    dotnet-build-configuration: Release
-    dotnet-self-contained-runtime-identifier: linux-x64
-    override-build: |
-      dotnet publish loar.csproj -c Release -o $SNAPCRAFT_PART_INSTALL/linux-x64 --self-contained -r linux-x64
-    build-packages:
-      - dotnet-sdk-8.0
-    #stage-packages:
-      #- libicu70
-      #- liblttng-ust1
-    prime:
-      - linux-x64/
+#  loar-linux-x64:
+#    source: https://github.com/cavecafe-cc/loar.git
+#    source-type: git
+#    source-branch: main
+#    plugin: dotnet
+#    dotnet-build-configuration: Release
+#    dotnet-self-contained-runtime-identifier: linux-x64
+#    override-build: |
+#      dotnet publish loar.csproj -c Release -o $SNAPCRAFT_PART_INSTALL/linux-x64 --self-contained -r linux-x64
+#    build-packages:
+#      - dotnet-sdk-8.0
+#    #stage-packages:
+#      #- libicu70
+#      #- liblttng-ust1
+#    prime:
+#      - linux-x64/
 
   loar-osx-arm64:
     source: https://github.com/cavecafe-cc/loar.git
