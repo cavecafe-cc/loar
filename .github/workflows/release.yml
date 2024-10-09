@@ -81,8 +81,8 @@ jobs:
           mv ./output/$OS/$ARCH/* $WORK_DIR
           zip -r $ZIP_FILE $WORK_DIR
           SHA256=$(shasum -a 256 $ZIP_FILE | awk '{ print $1 }')
-          echo "SHA256-$ZIP_FILE: $SHA256"
-          echo $SHA256 > SHA256-$ZIP_FILE
+          echo "$ZIP_FILE.SHA256: $SHA256"
+          echo $SHA256 > $ZIP_FILE.SHA256
 
       - name: Zip output (Windows)
         run: |
@@ -96,8 +96,8 @@ jobs:
           mv ./output/$OS/$ARCH/* $WORK_DIR
           zip -r $ZIP_FILE $WORK_DIR
           SHA256=$(shasum -a 256 $ZIP_FILE | awk '{ print $1 }')
-          echo "SHA256-$ZIP_FILE: $SHA256"
-          echo $SHA256 > SHA256-$ZIP_FILE
+          echo "$ZIP_FILE.SHA256: $SHA256"
+          echo $SHA256 > $ZIP_FILE.SHA256
 
       - name: Zip output (macOS Silicon)
         run: |
@@ -111,8 +111,8 @@ jobs:
           mv ./output/$OS/$ARCH/* $WORK_DIR
           zip -r $ZIP_FILE $WORK_DIR
           SHA256=$(shasum -a 256 $ZIP_FILE | awk '{ print $1 }')
-          echo "SHA256-$ZIP_FILE: $SHA256"
-          echo $SHA256 > SHA256-$ZIP_FILE
+          echo "$ZIP_FILE.SHA256: $SHA256"
+          echo $SHA256 > $ZIP_FILE.SHA256
 
       - name: Zip output (macOS Intel)
         run: |  
@@ -126,8 +126,8 @@ jobs:
           mv ./output/$OS/$ARCH/* $WORK_DIR
           zip -r $ZIP_FILE $WORK_DIR
           SHA256=$(shasum -a 256 $ZIP_FILE | awk '{ print $1 }')
-          echo "SHA256-$ZIP_FILE: $SHA256"
-          echo $SHA256 > SHA256-$ZIP_FILE
+          echo "$ZIP_FILE.SHA256: $SHA256"
+          echo $SHA256 > $ZIP_FILE.SHA256
 
       # 7. Upload ZIP files to Release
       - name: Upload Release Asset
@@ -138,6 +138,10 @@ jobs:
             ${{ env.REPO_NAME }}_win-x64.zip
             ${{ env.REPO_NAME }}_osx-arm64.zip
             ${{ env.REPO_NAME }}_osx-x64.zip
+            ${{ env.REPO_NAME }}_linux-x64.zip.SHA256
+            ${{ env.REPO_NAME }}_win-x64.zip.SHA256
+            ${{ env.REPO_NAME }}_osx-arm64.zip.SHA256
+            ${{ env.REPO_NAME }}_osx-x64.zip.SHA256
 
           tag_name: ${{ env.tag }}
         env:
