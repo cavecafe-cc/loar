@@ -26,16 +26,15 @@ apps:
       DOTNET_ROOT: $SNAP/usr/share/dotnet
 
 parts:
-  loar-osx-arm64:
+  loar:
     source: https://github.com/cavecafe-cc/loar.git
     source-type: git
     source-branch: main
     plugin: dotnet
     dotnet-build-configuration: Release
     dotnet-self-contained-runtime-identifier: osx-arm64
-    override-build: |
-      dotnet restore loar.csproj
-      dotnet build loar.csproj -c Release
-      dotnet publish loar.csproj -c Release -o $SNAPCRAFT_PART_INSTALL/osx-arm64 --self-contained -r osx-arm64
+    #dotnet-target-architecture: arm64
     build-packages:
       - dotnet-sdk-8.0
+    stage-packages:
+      - libicu70
