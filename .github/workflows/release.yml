@@ -41,7 +41,7 @@ jobs:
           git push origin $TAG
           echo "tag=$TAG" >> $GITHUB_ENV
         env:
-          #GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           #GITHUB_REPOSITORY: ${{ github.repository }}
           #GITHUB_OWNER: ${{ github.repository_owner }}
           #REPO_NAME: ${{ github.event.repository.name }}
