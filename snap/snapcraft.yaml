@@ -33,9 +33,9 @@ parts:
     source-branch: main
     plugin: dotnet
     dotnet-build-configuration: Release
+    dotnet-self-contained-runtime-identifier: linux-x64
     #dotnet-self-contained-runtime-identifier: osx-arm64
-    #dotnet-self-contained-runtime-identifier: linux-x64
-    dotnet-self-contained-runtime-identifier: win-x64
+    #dotnet-self-contained-runtime-identifier: win-x64
     #dotnet-self-contained-runtime-identifier: osx-x64
     build-packages:
       - dotnet-sdk-8.0
