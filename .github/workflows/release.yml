@@ -74,64 +74,80 @@ jobs:
           OS=linux
           ARCH=linux-x64
           
-          ZIP_FILE=${{ env.REPO_NAME }}_$ARCH.zip
+          TAR_FILE=${{ env.REPO_NAME }}_$ARCH.tar.gz
           WORK_DIR=${{ env.REPO_NAME }}/$OS/$ARCH/
           echo "WORK_DIR: $WORK_DIR"
           mkdir -p $WORK_DIR
           mv ./output/$OS/$ARCH/* $WORK_DIR
           ls -la $WORK_DIR
-          zip -r $ZIP_FILE $WORK_DIR${{ env.REPO_NAME }}
-          SHA256=$(shasum -a 256 $ZIP_FILE | awk '{ print $1 }')
-          echo "$ZIP_FILE.SHA256: $SHA256"
-          echo $SHA256 > $ZIP_FILE.SHA256
+          
+          # Create a tar.gz file
+          tar -czvf $TAR_FILE -C $WORK_DIR .
+          
+          # Calculate and print SHA-256 hash of the TAR.GZ file
+          SHA256=$(shasum -a 256 $TAR_FILE | awk '{ print $1 }')
+          echo "$TAR_FILE.SHA256: $SHA256"
+          echo $SHA256 > $TAR_FILE.SHA256
 
       - name: Zip output (Windows)
         run: |
           OS=windows
           ARCH=win-x64
           
-          ZIP_FILE=${{ env.REPO_NAME }}_$ARCH.zip
+          TAR_FILE=${{ env.REPO_NAME }}_$ARCH.tar.gz
           WORK_DIR=${{ env.REPO_NAME }}/$OS/$ARCH/
           echo "WORK_DIR: $WORK_DIR"
           mkdir -p $WORK_DIR
           mv ./output/$OS/$ARCH/* $WORK_DIR
           ls -la $WORK_DIR
-          zip -r $ZIP_FILE $WORK_DIR${{ env.REPO_NAME }}
-          SHA256=$(shasum -a 256 $ZIP_FILE | awk '{ print $1 }')
-          echo "$ZIP_FILE.SHA256: $SHA256"
-          echo $SHA256 > $ZIP_FILE.SHA256
+          
+          # Create a tar.gz file
+          tar -czvf $TAR_FILE -C $WORK_DIR .
+          
+          # Calculate and print SHA-256 hash of the TAR.GZ file
+          SHA256=$(shasum -a 256 $TAR_FILE | awk '{ print $1 }')
+          echo "$TAR_FILE.SHA256: $SHA256"
+          echo $SHA256 > $TAR_FILE.SHA256
 
       - name: Zip output (macOS Silicon)
         run: |
           OS=macos
           ARCH=osx-arm64
           
-          ZIP_FILE=${{ env.REPO_NAME }}_$ARCH.zip
+          TAR_FILE=${{ env.REPO_NAME }}_$ARCH.tar.gz
           WORK_DIR=${{ env.REPO_NAME }}/$OS/$ARCH/
           echo "WORK_DIR: $WORK_DIR"
           mkdir -p $WORK_DIR
           mv ./output/$OS/$ARCH/* $WORK_DIR
           ls -la $WORK_DIR
-          zip -r $ZIP_FILE $WORK_DIR${{ env.REPO_NAME }}
-          SHA256=$(shasum -a 256 $ZIP_FILE | awk '{ print $1 }')
-          echo "$ZIP_FILE.SHA256: $SHA256"
-          echo $SHA256 > $ZIP_FILE.SHA256
+          
+          # Create a tar.gz file
+          tar -czvf $TAR_FILE -C $WORK_DIR .
+          
+          # Calculate and print SHA-256 hash of the TAR.GZ file
+          SHA256=$(shasum -a 256 $TAR_FILE | awk '{ print $1 }')
+          echo "$TAR_FILE.SHA256: $SHA256"
+          echo $SHA256 > $TAR_FILE.SHA256
 
       - name: Zip output (macOS Intel)
         run: |  
           OS=macos
           ARCH=osx-x64
           
-          ZIP_FILE=${{ env.REPO_NAME }}_$ARCH.zip
+          TAR_FILE=${{ env.REPO_NAME }}_$ARCH.tar.gz
           WORK_DIR=${{ env.REPO_NAME }}/$OS/$ARCH/
           echo "WORK_DIR: $WORK_DIR"
           mkdir -p $WORK_DIR
           mv ./output/$OS/$ARCH/* $WORK_DIR
           ls -la $WORK_DIR
-          zip -r $ZIP_FILE $WORK_DIR${{ env.REPO_NAME }}
-          SHA256=$(shasum -a 256 $ZIP_FILE | awk '{ print $1 }')
-          echo "$ZIP_FILE.SHA256: $SHA256"
-          echo $SHA256 > $ZIP_FILE.SHA256
+          
+          # Create a tar.gz file
+          tar -czvf $TAR_FILE -C $WORK_DIR .
+          
+          # Calculate and print SHA-256 hash of the TAR.GZ file
+          SHA256=$(shasum -a 256 $TAR_FILE | awk '{ print $1 }')
+          echo "$TAR_FILE.SHA256: $SHA256"
+          echo $SHA256 > $TAR_FILE.SHA256
 
       # 7. Upload ZIP files to Release
       - name: Upload Release Asset
