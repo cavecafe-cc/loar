@@ -2,11 +2,11 @@ name: Build and Release
 
 on:
   workflow_dispatch: # allow manual trigger
-#  push:
-#    branches:
-#      - main
-#    tags:
-#      - 'v*' # only do this on tags that start with 'v'
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*' # only do this on tags that start with 'v'
 
 jobs:
   build:
