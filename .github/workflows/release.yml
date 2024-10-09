@@ -80,7 +80,7 @@ jobs:
           mkdir -p $WORK_DIR
           mv ./output/$OS/$ARCH/* $WORK_DIR
           ls -la $WORK_DIR
-          zip -r $ZIP_FILE ${{WORK_DIR}}${{env.REPO_NAME}}/$OS/$ARCH/
+          zip -r $ZIP_FILE $WORK_DIR${{env.REPO_NAME}}/$OS/$ARCH/
           SHA256=$(shasum -a 256 $ZIP_FILE | awk '{ print $1 }')
           echo "$ZIP_FILE.SHA256: $SHA256"
           echo $SHA256 > $ZIP_FILE.SHA256
@@ -96,7 +96,7 @@ jobs:
           mkdir -p $WORK_DIR
           mv ./output/$OS/$ARCH/* $WORK_DIR
           ls -la $WORK_DIR
-          zip -r $ZIP_FILE ${{WORK_DIR}}${{env.REPO_NAME}}/$OS/$ARCH/
+          zip -r $ZIP_FILE $WORK_DIR${{env.REPO_NAME}}/$OS/$ARCH/
           SHA256=$(shasum -a 256 $ZIP_FILE | awk '{ print $1 }')
           echo "$ZIP_FILE.SHA256: $SHA256"
           echo $SHA256 > $ZIP_FILE.SHA256
@@ -112,7 +112,7 @@ jobs:
           mkdir -p $WORK_DIR
           mv ./output/$OS/$ARCH/* $WORK_DIR
           ls -la $WORK_DIR
-          zip -r $ZIP_FILE ${{WORK_DIR}}${{env.REPO_NAME}}/$OS/$ARCH/
+          zip -r $ZIP_FILE $WORK_DIR${{env.REPO_NAME}}/$OS/$ARCH/
           SHA256=$(shasum -a 256 $ZIP_FILE | awk '{ print $1 }')
           echo "$ZIP_FILE.SHA256: $SHA256"
           echo $SHA256 > $ZIP_FILE.SHA256
@@ -128,7 +128,7 @@ jobs:
           mkdir -p $WORK_DIR
           mv ./output/$OS/$ARCH/* $WORK_DIR
           ls -la $WORK_DIR
-          zip -r $ZIP_FILE ${{WORK_DIR}}${{env.REPO_NAME}}/$OS/$ARCH/
+          zip -r $ZIP_FILE $WORK_DIR${{env.REPO_NAME}}/$OS/$ARCH/
           SHA256=$(shasum -a 256 $ZIP_FILE | awk '{ print $1 }')
           echo "$ZIP_FILE.SHA256: $SHA256"
           echo $SHA256 > $ZIP_FILE.SHA256
