@@ -75,7 +75,7 @@ jobs:
           ARCH=linux-x64
           
           ZIP_FILE=${{ env.REPO_NAME }}_$ARCH.zip
-          WORK_DIR=${{ github.repository }}/$OS/$ARCH/
+          WORK_DIR=${{ env.REPO_NAME }}/$OS/$ARCH/
           echo "WORK_DIR: $WORK_DIR"
           mkdir -p $WORK_DIR
           mv ./output/$OS/$ARCH/* $WORK_DIR
@@ -91,7 +91,7 @@ jobs:
           ARCH=win-x64
           
           ZIP_FILE=${{ env.REPO_NAME }}_$ARCH.zip
-          WORK_DIR=${{ github.repository }}/$OS/$ARCH/
+          WORK_DIR=${{ env.REPO_NAME }}/$OS/$ARCH/
           echo "WORK_DIR: $WORK_DIR"
           mkdir -p $WORK_DIR
           mv ./output/$OS/$ARCH/* $WORK_DIR
@@ -107,7 +107,7 @@ jobs:
           ARCH=osx-arm64
           
           ZIP_FILE=${{ env.REPO_NAME }}_$ARCH.zip
-          WORK_DIR=${{ github.repository }}/$OS/$ARCH/
+          WORK_DIR=${{ env.REPO_NAME }}/$OS/$ARCH/
           echo "WORK_DIR: $WORK_DIR"
           mkdir -p $WORK_DIR
           mv ./output/$OS/$ARCH/* $WORK_DIR
@@ -123,7 +123,7 @@ jobs:
           ARCH=osx-x64
           
           ZIP_FILE=${{ env.REPO_NAME }}_$ARCH.zip
-          WORK_DIR=${{ github.repository }}/$OS/$ARCH/
+          WORK_DIR=${{ env.REPO_NAME }}/$OS/$ARCH/
           echo "WORK_DIR: $WORK_DIR"
           mkdir -p $WORK_DIR
           mv ./output/$OS/$ARCH/* $WORK_DIR
