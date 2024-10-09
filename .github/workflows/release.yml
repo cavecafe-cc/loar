@@ -154,14 +154,14 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            ${{ env.REPO_NAME }}_linux-x64.zip
-            ${{ env.REPO_NAME }}_win-x64.zip
-            ${{ env.REPO_NAME }}_osx-arm64.zip
-            ${{ env.REPO_NAME }}_osx-x64.zip
-            ${{ env.REPO_NAME }}_linux-x64.zip.SHA256
-            ${{ env.REPO_NAME }}_win-x64.zip.SHA256
-            ${{ env.REPO_NAME }}_osx-arm64.zip.SHA256
-            ${{ env.REPO_NAME }}_osx-x64.zip.SHA256
+            ${{ env.REPO_NAME }}_linux-x64.tar.gz
+            ${{ env.REPO_NAME }}_win-x64.tar.gz
+            ${{ env.REPO_NAME }}_osx-arm64.tar.gz
+            ${{ env.REPO_NAME }}_osx-x64.tar.gz
+            ${{ env.REPO_NAME }}_linux-x64.tar.gz.SHA256
+            ${{ env.REPO_NAME }}_win-x64.tar.gz.SHA256
+            ${{ env.REPO_NAME }}_osx-arm64.tar.gz.SHA256
+            ${{ env.REPO_NAME }}_osx-x64.tar.gz.SHA256
 
           tag_name: ${{ env.tag }}
         env:
