@@ -1,0 +1,6 @@
+REPO_OWNER="cavecafe-cc"
+REPO_NAME="loar"
+PROJECT_NAME="Loar"
+PROJECT_DESC="Local Archive Utility (LOAR)"
+PROJECT_HOME="https://github.com/cavecafe-cc/loar"
+VERSION_VALUE="0.7.0"
