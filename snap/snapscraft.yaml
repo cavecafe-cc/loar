@@ -10,15 +10,15 @@ adopt-info: loar
 compression: lzo
 icon: loar-logo.png
 type: app
-title: LOAR
+title: Loar
 issues: https://github.com/cavecafe-cc/loar/issues
-contact: https://github.com/cavecafe
+contact: https://github.com/cavecafe-cc
 website: https://github.com/cavecafe-cc/loar
 license: GPL-3.0
 
 architectures:
   - build-on: amd64
-  #- build-on: arm64
+  #- build-on: arm64 # supported by MultiPass, but limited in macOS
 
 apps:
   loar:
@@ -34,6 +34,7 @@ parts:
     plugin: dotnet
     dotnet-build-configuration: Release
     dotnet-self-contained-runtime-identifier: linux-x64
+    # supported but limited in macOS, Windows
     #dotnet-self-contained-runtime-identifier: osx-arm64
     #dotnet-self-contained-runtime-identifier: win-x64
     #dotnet-self-contained-runtime-identifier: osx-x64
