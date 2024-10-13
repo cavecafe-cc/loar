@@ -32,7 +32,6 @@ if [ ! -f "$SNAP_FILE" ]; then
   read -p "Enter LICENSE: " LICENSE
 
   cat <<EOF > "$SNAP_FILE"
-REPO_URL="$REPO_URL"
 REPO_OWNER="$REPO_OWNER"
 REPO_NAME="$REPO_NAME"
 PROJECT_NAME="$PROJECT_NAME"
@@ -106,7 +105,7 @@ apps:
   $PROJECT_NAME_LOWER:
     command: $PROJECT_NAME_LOWER
     environment:
-      DOTNET_ROOT: \$SNAP/usr/share/dotnet
+      DOTNET_ROOT: $SNAP/usr/share/dotnet
 
 parts:
   $PROJECT_NAME_LOWER:
