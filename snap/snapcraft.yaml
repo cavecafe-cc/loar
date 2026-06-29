@@ -1,10 +1,19 @@
 name: loar
 base: core22
-version: '1.0.45'
+version: '1.0.46'
 summary: Local Archive utility
+architectures:
+  - build-on: amd64
+  - build-on: arm64
 description: |
-  A lightweight cross-platform CLI utility that safely backs up and archives 
-  local-only files and folders to a target directory.
+  LoAr (Local Archive Utility) is a lightweight, cross-platform CLI/TUI tool written in Rust, designed to back up multiple software development projects and directories scattered across your system into a single backup destination safely and efficiently.
+
+  Key Features:
+  1. High-Speed Incremental Skip: Compares file size, modification time (mtime), and SHA-256 hash to automatically skip backup copying (and encryption) for unchanged files. Saves extreme I/O operations, completing synchronization for gigabyte-scale repositories in just a few seconds.
+  2. One-Way Sync & Auto Cleanup: Automatically deletes backed-up files from the target drive if they are deleted in the source directory, keeping your backup in perfect synchronization. Cleans up empty folders or leftover directories with only OS metadata (like .DS_Store) using a bottom-up Depth-First Search (DFS) cleanup algorithm.
+  3. AES-256-GCM Secure Encryption: Allows independent encryption configuration per repository. Uses Argon2id for key derivation and AES-256-GCM to obfuscate filenames and securely encrypt all file contents.
+  4. Global Backup Database (SQLite DB): Manages archive histories and file record indices in an SQLite database file (loar.db) located at the root of the target directory. Optimizes database physical file size automatically using the VACUUM command whenever old backup sessions are pruned.
+  5. Dual Interactive TUI & CLI Modes: Provides an interactive Terminal User Interface (TUI) menu for easy backup and restore management. Supports a fully non-interactive CLI mode suitable for automated cron jobs or scheduler tasks.
 
 grade: stable
 confinement: classic
