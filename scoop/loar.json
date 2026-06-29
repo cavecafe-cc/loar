@@ -1,0 +1,17 @@
+{
+    "version": "v1.0.34",
+    "description": "A lightweight cross-platform CLI utility that safely backs up and archives local-only files",
+    "homepage": "https://github.com/cavecafe-cc/local-archive",
+    "license": "MIT",
+    "architecture": {
+        "64bit": {
+            "url": "https://bin.cavecafe.cc/downloads/loar/loar-windows-x86_64-v1.0.34.zip",
+            "hash": "0adb832bcd7c43349c6b4a9a6c4f77c1d8d91abc362efb8816137095a9277955"
+        },
+        "arm64": {
+            "url": "https://bin.cavecafe.cc/downloads/loar/loar-windows-arm64-v1.0.34.zip",
+            "hash": "d6c0aa9cb854c36c4ca03ac2d9f7e81e9c4dfe78e05863607cb607cda3b3bf45"
+        }
+    },
+    "bin": "loar.exe"
+}

@@ -1,0 +1,392 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    name: Publish for ${{ matrix.os_name }} ${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    env:
+      CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
+    strategy:
+      matrix:
+        include:
+          - runner: [self-hosted, macOS]
+            os: macos-latest
+            os_name: macos
+            arch: arm64
+            target: aarch64-apple-darwin
+            ext: tar.gz
+          - runner: [self-hosted, linux]
+            os: ubuntu-latest
+            os_name: linux
+            arch: x86_64
+            target: x86_64-unknown-linux-gnu
+            ext: deb
+          - runner: [self-hosted, linux]
+            os: ubuntu-latest
+            os_name: linux
+            arch: arm64
+            target: aarch64-unknown-linux-gnu
+            ext: deb
+          - runner: [self-hosted, windows]
+            os: windows-latest
+            os_name: windows
+            arch: x86_64
+            target: x86_64-pc-windows-msvc
+            ext: zip
+            msvc_arch: amd64
+          - runner: [self-hosted, windows]
+            os: windows-latest
+            os_name: windows
+            arch: arm64
+            target: aarch64-pc-windows-msvc
+            ext: zip
+            msvc_arch: amd64_arm64
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify Version Consistency (Unix)
+        if: matrix.os_name != 'windows'
+        run: |
+          TAG_VERSION=${GITHUB_REF#refs/tags/v}
+          CARGO_VERSION=$(grep '^version =' Cargo.toml | head -n1 | cut -d '"' -f2)
+          echo "Git Tag Version: $TAG_VERSION"
+          echo "Cargo.toml Version: $CARGO_VERSION"
+          if [ "$TAG_VERSION" != "$CARGO_VERSION" ]; then
+            echo "::error::Version mismatch! Git Tag ($TAG_VERSION) does not match Cargo.toml ($CARGO_VERSION)"
+            exit 1
+          fi
+
+      - name: Verify Version Consistency (Windows)
+        if: matrix.os_name == 'windows'
+        run: |
+          powershell -Command "$tag_version = $env:GITHUB_REF_NAME -replace '^v', ''; $cargo_version = (Get-Content Cargo.toml | Select-String '^version\s*=\s*\"(.*)\"').Matches.Groups[1].Value; Write-Host 'Git Tag Version:' $tag_version; Write-Host 'Cargo.toml Version:' $cargo_version; if ($tag_version -ne $cargo_version) { Write-Error 'Version mismatch! Git Tag does not match Cargo.toml'; exit 1 }"
+        shell: cmd
+
+      - name: Install Rust (Windows if missing)
+        if: matrix.os_name == 'windows'
+        run: |
+          where rustup >nul 2>nul
+          if %errorlevel% neq 0 (
+            curl -sSfL https://win.rustup.rs/ -o rustup-init.exe
+            rustup-init.exe -y --default-toolchain stable
+            del rustup-init.exe
+          )
+        shell: cmd
+
+      - name: Add VS Installer to PATH (Windows)
+        if: matrix.os_name == 'windows'
+        run: powershell -Command "Add-Content -Path $env:GITHUB_PATH -Value \"C:\Program Files (x86)\Microsoft Visual Studio\Installer\""
+        shell: cmd
+
+      - name: Set up MSVC (Windows)
+        if: matrix.os_name == 'windows'
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: ${{ matrix.msvc_arch }}
+
+      - name: Add cargo to PATH (Unix)
+        if: matrix.os_name != 'windows'
+        run: |
+          RUNNER_USER="${{ vars.RUNNER_USER || 'thomas' }}"
+          if [ "$(uname)" = "Darwin" ]; then
+            echo "/Users/${RUNNER_USER}/.cargo/bin" >> $GITHUB_PATH
+            echo "/opt/homebrew/bin" >> $GITHUB_PATH
+          else
+            echo "/home/${RUNNER_USER}/.cargo/bin" >> $GITHUB_PATH
+          fi
+        shell: bash
+
+      - name: Install Rust (Unix if missing)
+        if: matrix.os_name != 'windows'
+        run: |
+          RUNNER_USER="${{ vars.RUNNER_USER || 'thomas' }}"
+          export PATH="/Users/${RUNNER_USER}/.cargo/bin:/home/${RUNNER_USER}/.cargo/bin:/opt/homebrew/bin:$PATH"
+          if ! command -v rustup &> /dev/null; then
+            echo "rustup not found. Installing via sh.rustup.rs..."
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+          else
+            echo "rustup is already installed."
+          fi
+        shell: bash
+
+      - name: Add cargo to PATH (Windows)
+        if: matrix.os_name == 'windows'
+        run: powershell -Command "Add-Content -Path $env:GITHUB_PATH -Value \"$env:USERPROFILE\.cargo\bin\""
+        shell: cmd
+
+      - name: Add AWS CLI to PATH (Windows)
+        if: matrix.os_name == 'windows'
+        run: powershell -Command "Add-Content -Path $env:GITHUB_PATH -Value \"C:\Program Files\Amazon\AWSCLIV2\""
+        shell: cmd
+
+      - name: Set up Rust Target (Unix)
+        if: matrix.os_name != 'windows'
+        run: |
+          rustup toolchain install stable || rustup toolchain install stable --force
+          rustup default stable
+          rustup target add ${{ matrix.target }}
+        shell: bash
+
+      - name: Set up Rust Target (Windows)
+        if: matrix.os_name == 'windows'
+        run: |
+          rustup toolchain install stable
+          rustup default stable
+          rustup target add ${{ matrix.target }}
+        shell: cmd
+
+      - name: Build release (Unix)
+        if: matrix.os_name != 'windows'
+        run: cargo build --release --target ${{ matrix.target }}
+        shell: bash
+
+      - name: Build release (Windows)
+        if: matrix.os_name == 'windows'
+        run: cargo build --release --target ${{ matrix.target }}
+        shell: cmd
+
+      # Build Debian Package
+      - name: Build Debian Package
+        if: matrix.os_name == 'linux'
+        run: |
+          cargo deb --target ${{ matrix.target }}
+          mv target/${{ matrix.target }}/debian/loar_*.deb ./loar-linux-${{ matrix.arch }}-${{ github.ref_name }}.deb
+        shell: bash
+
+      # Compress Unix Tarball (macOS, etc.)
+      - name: Package Artifacts (macOS tar.gz)
+        if: matrix.os_name == 'macos'
+        run: |
+          cd target/${{ matrix.target }}/release
+          tar -czf ../../../loar-macos-${{ matrix.arch }}-${{ github.ref_name }}.tar.gz loar
+        shell: bash
+
+      # Compress Windows zip
+      - name: Package Artifacts (Windows zip)
+        if: matrix.os_name == 'windows'
+        run: |
+          cd target\${{ matrix.target }}\release
+          powershell -Command "Compress-Archive -Path loar.exe -DestinationPath ..\..\..\loar-windows-${{ matrix.arch }}-${{ github.ref_name }}.zip"
+        shell: cmd
+
+      # Upload to GitHub Releases
+      - name: Upload to GitHub Release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: loar-${{ matrix.os_name }}-${{ matrix.arch }}-${{ github.ref_name }}.${{ matrix.ext }}
+          asset_name: loar-${{ matrix.os_name }}-${{ matrix.arch }}-${{ github.ref_name }}.${{ matrix.ext }}
+          tag: ${{ github.ref }}
+          overwrite: true
+
+      # Upload to Cloudflare R2 (Unix)
+      - name: Upload to Cloudflare R2 (Unix)
+        if: matrix.os_name != 'windows'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_BIN_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_BIN_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+        run: |
+          ASSET_NAME=loar-${{ matrix.os_name }}-${{ matrix.arch }}-${{ github.ref_name }}.${{ matrix.ext }}
+          LATEST_NAME=loar-${{ matrix.os_name }}-${{ matrix.arch }}-latest.${{ matrix.ext }}
+          aws s3 cp ${ASSET_NAME} s3://${{ secrets.R2_BIN_BUCKET }}/downloads/loar/${ASSET_NAME} --endpoint-url ${{ secrets.R2_BIN_ENDPOINT_URL }}
+          aws s3 cp ${ASSET_NAME} s3://${{ secrets.R2_BIN_BUCKET }}/downloads/loar/${LATEST_NAME} --endpoint-url ${{ secrets.R2_BIN_ENDPOINT_URL }}
+        shell: bash
+
+      # Upload to Cloudflare R2 (Windows)
+      - name: Upload to Cloudflare R2 (Windows)
+        if: matrix.os_name == 'windows'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_BIN_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_BIN_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+        run: |
+          aws s3 cp loar-windows-${{ matrix.arch }}-${{ github.ref_name }}.zip s3://${{ secrets.R2_BIN_BUCKET }}/downloads/loar/loar-windows-${{ matrix.arch }}-${{ github.ref_name }}.zip --endpoint-url ${{ secrets.R2_BIN_ENDPOINT_URL }}
+          aws s3 cp loar-windows-${{ matrix.arch }}-${{ github.ref_name }}.zip s3://${{ secrets.R2_BIN_BUCKET }}/downloads/loar/loar-windows-${{ matrix.arch }}-latest.zip --endpoint-url ${{ secrets.R2_BIN_ENDPOINT_URL }}
+        shell: cmd
+
+      # Update Homebrew Formula & Push Install Scripts (macOS arm64 only)
+      - name: Update Homebrew Formula & Push Install Scripts
+        if: matrix.os_name == 'macos' && matrix.arch == 'arm64'
+        env:
+          TAP_TOKEN: ${{ secrets.PAT_GITHUB_HOMEBREW_TAP }}
+        run: |
+          ASSET_NAME=loar-macos-arm64-${{ github.ref_name }}.tar.gz
+          SHA256=$(shasum -a 256 ${ASSET_NAME} | awk '{print $1}')
+          
+          echo "Updating Formula for Version: ${{ github.ref_name }} with SHA256: ${SHA256}"
+          
+          git clone https://x-access-token:${TAP_TOKEN}@github.com/cavecafe-cc/homebrew-tap.git
+          
+          # Copy install.sh / install.ps1 scripts to homebrew-tap repository
+          cp scripts/install.sh homebrew-tap/install.sh
+          cp scripts/install.ps1 homebrew-tap/install.ps1
+          
+          cd homebrew-tap
+          mkdir -p Formula
+          
+          echo 'class Loar < Formula' > Formula/loar.rb
+          echo '  desc "A lightweight cross-platform CLI utility that safely backs up and archives local-only files"' >> Formula/loar.rb
+          echo '  homepage "https://github.com/cavecafe-cc/local-archive"' >> Formula/loar.rb
+          echo "  url \"https://bin.cavecafe.cc/downloads/loar/${ASSET_NAME}\"" >> Formula/loar.rb
+          echo "  sha256 \"${SHA256}\"" >> Formula/loar.rb
+          echo '  license "MIT"' >> Formula/loar.rb
+          echo '' >> Formula/loar.rb
+          echo '  def install' >> Formula/loar.rb
+          echo '    bin.install "loar"' >> Formula/loar.rb
+          echo '  end' >> Formula/loar.rb
+          echo '' >> Formula/loar.rb
+          echo '  test do' >> Formula/loar.rb
+          echo '    system "#{bin}/loar", "--help"' >> Formula/loar.rb
+          echo '  end' >> Formula/loar.rb
+          echo 'end' >> Formula/loar.rb
+          
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Formula/loar.rb install.sh install.ps1
+          git commit -m "Update loar and install scripts to ${{ github.ref_name }}" || echo "No changes to commit"
+          git push origin main
+        shell: bash
+        # trigger: v1.0.23
+
+  snapcraft:
+    name: Build & Publish Snap (Linux)
+    runs-on: [self-hosted, linux]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Add cargo to PATH (Linux)
+        run: |
+          RUNNER_USER="${{ vars.RUNNER_USER || 'thomas' }}"
+          echo "/home/${RUNNER_USER}/.cargo/bin" >> $GITHUB_PATH
+        shell: bash
+
+      - name: Set up Rust (Linux)
+        run: |
+          rustup default stable
+        shell: bash
+
+      - name: Build Rust Binary
+        run: |
+          cargo build --release
+        shell: bash
+
+      - name: Build Snap (Destructive Mode)
+        run: |
+          snapcraft --destructive-mode
+        shell: bash
+
+      - name: Publish Snap to Store
+        env:
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
+        run: |
+          snapcraft upload loar_*.snap --release stable || echo "Snap uploaded successfully; classic confinement review is pending."
+        shell: bash
+
+  apt-repo:
+    name: Build & Publish APT Repository (Linux)
+    runs-on: [self-hosted, linux]
+    needs: publish
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies (dpkg-dev if missing)
+        run: |
+          if ! command -v dpkg-scanpackages &> /dev/null; then
+            sudo apt-get update && sudo apt-get install -y dpkg-dev
+          fi
+        shell: bash
+
+      - name: Import GPG Key
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.APT_GPG_PRIVATE_KEY }}
+        run: |
+          echo "$GPG_PRIVATE_KEY" | gpg --batch --import --yes
+          KEY_ID=$(echo "$GPG_PRIVATE_KEY" | gpg --with-colons --import-options show-only --import | grep '^sec' | cut -d: -f5)
+          echo -e "5\ny\n" | gpg --batch --command-fd 0 --expert --trust-model pgp --edit-key "$KEY_ID" trust || true
+          echo "APT_GPG_KEY_ID=$KEY_ID" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Create Debian Directory Layout
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_BIN_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_BIN_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+        run: |
+          # 1. Create Layout
+          mkdir -p apt-repo/dists/stable/main/binary-amd64
+          mkdir -p apt-repo/dists/stable/main/binary-arm64
+          mkdir -p apt-repo/pool/amd64
+          mkdir -p apt-repo/pool/arm64
+
+          # 2. Download pre-built deb packages from Cloudflare R2
+          aws s3 cp s3://${{ secrets.R2_BIN_BUCKET }}/downloads/loar/loar-linux-x86_64-${{ github.ref_name }}.deb apt-repo/pool/amd64/loar-linux-amd64-${{ github.ref_name }}.deb --endpoint-url ${{ secrets.R2_BIN_ENDPOINT_URL }}
+          aws s3 cp s3://${{ secrets.R2_BIN_BUCKET }}/downloads/loar/loar-linux-arm64-${{ github.ref_name }}.deb apt-repo/pool/arm64/loar-linux-arm64-${{ github.ref_name }}.deb --endpoint-url ${{ secrets.R2_BIN_ENDPOINT_URL }}
+
+          # 3. Build Package Indices inside apt-repo
+          cd apt-repo
+          dpkg-scanpackages pool/amd64 /dev/null > dists/stable/main/binary-amd64/Packages
+          
+          dpkg-scanpackages pool/arm64 /dev/null > dists/stable/main/binary-arm64/Packages
+
+          # 4. Generate Release file
+          cd dists/stable
+          
+          echo "Origin: cavecafe-cc" > Release
+          echo "Label: LoAr APT Repository" >> Release
+          echo "Suite: stable" >> Release
+          echo "Codename: stable" >> Release
+          echo "Version: ${{ github.ref_name }}" >> Release
+          echo "Architectures: amd64 arm64" >> Release
+          echo "Components: main" >> Release
+          echo "Description: Apt repository for LoAr (Local Archive Utility)" >> Release
+          echo "Date: $(date -Ru)" >> Release
+
+           echo "SHA256:" >> Release
+          for f in main/binary-amd64/Packages main/binary-arm64/Packages; do
+            if [ -f "$f" ]; then
+              SIZE=$(wc -c < "$f" | tr -d ' ')
+              HASH=$(sha256sum "$f" | cut -d' ' -f1)
+              echo " $HASH $SIZE $f" >> Release
+            fi
+          done
+
+          # 5. Sign Release file (InRelease & Release.gpg)
+          PASSPHRASE="${{ secrets.APT_GPG_PASSPHRASE }}"
+          echo "$PASSPHRASE" | gpg --batch --yes --pinentry-mode loopback --default-key "$APT_GPG_KEY_ID" --passphrase-fd 0 --clearsign -o InRelease Release
+          echo "$PASSPHRASE" | gpg --batch --yes --pinentry-mode loopback --default-key "$APT_GPG_KEY_ID" --passphrase-fd 0 -abs -o Release.gpg Release
+        shell: bash
+
+      - name: Upload GPG Public Key to R2
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_BIN_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_BIN_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+        run: |
+          gpg --armor --export cavecafe@gmail.com > apt-repo/gpg.key
+          aws s3 cp apt-repo/gpg.key s3://${{ secrets.R2_BIN_BUCKET }}/downloads/loar/apt/gpg.key --endpoint-url ${{ secrets.R2_BIN_ENDPOINT_URL }}
+        shell: bash
+
+      - name: Sync APT Repo to Cloudflare R2
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_BIN_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_BIN_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+          AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+        run: |
+          aws s3 cp apt-repo/ s3://${{ secrets.R2_BIN_BUCKET }}/downloads/loar/apt/ --recursive --endpoint-url ${{ secrets.R2_BIN_ENDPOINT_URL }}
+        shell: bash
+

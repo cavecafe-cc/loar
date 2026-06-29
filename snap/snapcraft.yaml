@@ -1,0 +1,22 @@
+name: loar
+base: core22
+version: '1.0.45'
+summary: Local Archive utility
+description: |
+  A lightweight cross-platform CLI utility that safely backs up and archives 
+  local-only files and folders to a target directory.
+
+grade: stable
+confinement: classic
+
+apps:
+  loar:
+    command: bin/loar
+
+parts:
+  loar:
+    plugin: nil
+    source: .
+    override-build: |
+      mkdir -p $CRAFT_PART_INSTALL/bin
+      cp target/release/loar $CRAFT_PART_INSTALL/bin/
