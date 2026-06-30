@@ -282,6 +282,11 @@ jobs:
           cargo build --release
         shell: bash
 
+      - name: Use Self-hosted Snapcraft Configuration
+        run: |
+          cp snap/snapcraft.nil.yaml snap/snapcraft.yaml
+        shell: bash
+
       - name: Build Snap (Destructive Mode)
         run: |
           snapcraft --destructive-mode
