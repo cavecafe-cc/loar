@@ -1,6 +1,6 @@
 [package]
 name = "loar"
-version = "1.0.46"
+version = "1.0.47"
 edition = "2024"
 description = "A lightweight cross-platform CLI utility that safely backs up and archives local-only files"
 
