@@ -2,7 +2,7 @@
 
 `LoAr` is a local archiving and synchronization tool written in Rust, designed to back up multiple software development projects and directories scattered across your system into a single backup destination safely and efficiently.
 
-It optimizes storage space and enhances security by combining **Incremental Skip**, **One-way Sync**, **AES-256-GCM encryption**, and **SQLite metadata indexing**.
+It optimizes storage space and enhances security by combining **Incremental Skip**, **One-way Sync**, **High-Performance AES-256 encryption**, and **SQLite metadata indexing**.
 
 ---
 
@@ -14,9 +14,9 @@ It optimizes storage space and enhances security by combining **Incremental Skip
 2. **One-Way Sync & Auto Cleanup**
    - Automatically deletes backed-up files from the target drive if they are deleted in the source directory, keeping your backup in perfect synchronization.
    - Cleans up empty folders or leftover directories with only macOS metadata (like `.DS_Store`) using a bottom-up Depth-First Search (DFS) cleanup algorithm.
-3. **AES-256-GCM Secure Encryption**
+3. **High-Performance AES-256 Encryption**
    - Allows independent encryption configuration (`encrypt = true`) per repository.
-   - Uses Argon2id for key derivation and AES-256-GCM to obfuscate filenames and securely encrypt all file contents.
+   - Bypasses repetitive encryption overheads by using a single Argon2id key derivation per session, combined with AES-256-GCM to obfuscate filenames and encrypt file contents with high throughput.
 4. **Global Backup Database (SQLite DB)**
    - Manages archive histories and file record indices in an SQLite database file (`loar.db`) located at the root of the target directory.
    - Optimizes database physical file size automatically using the `VACUUM` command whenever old backup sessions are pruned.

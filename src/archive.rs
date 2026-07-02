@@ -100,6 +100,23 @@ pub fn run_backup(
         return Ok("No new or ignored files found to archive.".to_string());
     }
 
+    // Pre-derive key for performance if encryption is enabled
+    // Argon2id is intentionally slow, so we derive the key once here.
+    let mut repo_salt = [0u8; 16];
+    let derived_key = if repo.encrypt {
+        let pwd = password.ok_or_else(|| "Password is required for encrypted repository".to_string())?;
+        
+        let mut hasher = Sha256::new();
+        hasher.update(repo.name.as_bytes());
+        let hash_result = hasher.finalize();
+        repo_salt.copy_from_slice(&hash_result[0..16]);
+        
+        let key = crypto::derive_key(pwd, &repo_salt)?;
+        Some(key)
+    } else {
+        None
+    };
+
     // Prepare target paths
     let target_base = Path::new(target_dir).join(&repo.name);
     let timestamp = chrono::Local::now().format("%Y%m%d%H%M%S").to_string();
@@ -170,12 +187,12 @@ pub fn run_backup(
 
         // Changed or new file: perform normal copy/encryption
         let (_, final_iv, final_salt) = if repo.encrypt {
-            let pwd = password.ok_or_else(|| "Password is required for encrypted repository".to_string())?;
+            let key_bytes = derived_key.as_ref().ok_or_else(|| "Derived key missing".to_string())?;
             let obs_name = get_obfuscated_filename(&rel_str);
             let dest = temp_dir.join(&obs_name);
             
-            // Encrypt and write to temporary folder
-            let (salt, iv) = crypto::encrypt_file(&src_file_path, &dest, pwd)?;
+            // Encrypt and write to temporary folder using pre-derived key & repo salt
+            let (salt, iv) = crypto::encrypt_file(&src_file_path, &dest, key_bytes, &repo_salt)?;
             (dest, Some(salt), Some(iv))
         } else {
             let dest = temp_dir.join(rel_path);
@@ -271,7 +288,7 @@ pub fn run_backup(
 
                         if target_file.exists() {
                             if let Err(e) = fs::remove_file(&target_file) {
-                                eprintln!("Warning: Failed to remove deleted file from backup '{}': {}", target_file.display(), e);
+                                  eprintln!("Warning: Failed to remove deleted file from backup '{}': {}", target_file.display(), e);
                             }
                         }
 
@@ -338,6 +355,22 @@ pub fn run_restore(
         return Err(format!("Backup source folder '{}' does not exist", archive_source_base.display()));
     }
 
+    // Pre-derive key for performance if encryption is enabled
+    let mut repo_salt = [0u8; 16];
+    let derived_key = if repo.encrypt {
+        let pwd = password.ok_or_else(|| "Password is required for encrypted recovery".to_string())?;
+        
+        let mut hasher = Sha256::new();
+        hasher.update(repo.name.as_bytes());
+        let hash_result = hasher.finalize();
+        repo_salt.copy_from_slice(&hash_result[0..16]);
+        
+        let key = crypto::derive_key(pwd, &repo_salt)?;
+        Some(key)
+    } else {
+        None
+    };
+
     let mut restored_count = 0;
 
     for file_record in records {
@@ -358,7 +391,14 @@ pub fn run_restore(
                 return Err(format!("Encrypted backup file '{}' not found", src_file.display()));
             }
 
-            crypto::decrypt_file(&src_file, &restored_file_path, pwd)?;
+            // Attempt decrypt using cached key & salt first, fall back to password computation if needed
+            crypto::decrypt_file(
+                &src_file,
+                &restored_file_path,
+                pwd,
+                derived_key.as_deref(),
+                Some(&repo_salt),
+            )?;
         } else {
             let src_file = archive_source_base.join(&file_record.relative_path);
             

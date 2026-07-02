@@ -49,24 +49,23 @@ pub fn derive_key(password: &str, salt: &[u8]) -> Result<Vec<u8>, String> {
 }
 
 /// Encrypts a source file and writes to target path with [LOAR Magic + Salt + IV + Encrypted Data] format.
+/// Receives derived key and salt directly to bypass repetitive Argon2id key derivation for performance.
 pub fn encrypt_file(
     src_path: &Path,
     dest_path: &Path,
-    password: &str,
+    key_bytes: &[u8],
+    salt: &[u8],
 ) -> Result<(String, String), String> {
     let plaintext = fs::read(src_path)
         .map_err(|e| format!("Failed to read source file: {}", e))?;
 
-    // Generate random Salt and IV
-    let mut salt = [0u8; SALT_SIZE];
+    // Generate random IV
     let mut iv = [0u8; IV_SIZE];
     let mut rng = rand::thread_rng();
-    rng.fill_bytes(&mut salt);
     rng.fill_bytes(&mut iv);
 
-    // Derive Key
-    let key_bytes = derive_key(password, &salt)?;
-    let key = Key::<Aes256Gcm>::from_slice(&key_bytes);
+    // Use pre-derived Key
+    let key = Key::<Aes256Gcm>::from_slice(key_bytes);
     let cipher = Aes256Gcm::new(key);
     let nonce = Nonce::from_slice(&iv);
 
@@ -77,7 +76,7 @@ pub fn encrypt_file(
     // Package: Magic + Salt + IV + Ciphertext
     let mut packaged = Vec::with_capacity(LOAR_MAGIC.len() + SALT_SIZE + IV_SIZE + ciphertext.len());
     packaged.extend_from_slice(LOAR_MAGIC);
-    packaged.extend_from_slice(&salt);
+    packaged.extend_from_slice(salt);
     packaged.extend_from_slice(&iv);
     packaged.extend_from_slice(&ciphertext);
 
@@ -86,14 +85,18 @@ pub fn encrypt_file(
         .map_err(|e| format!("Failed to write encrypted file: {}", e))?;
 
     // Return hex encoded IV and Salt for DB logging
-    Ok((hex::encode(&salt), hex::encode(&iv)))
+    Ok((hex::encode(salt), hex::encode(&iv)))
 }
 
 /// Decrypts a packaged encrypted file and writes to target path.
+/// Leverages cached_key and cached_salt to bypass repetitive Argon2id calculations when salt matches.
+/// Falls back to dynamic key derivation if salt mismatch is detected to preserve backward compatibility.
 pub fn decrypt_file(
     src_path: &Path,
     dest_path: &Path,
     password: &str,
+    cached_key: Option<&[u8]>,
+    cached_salt: Option<&[u8]>,
 ) -> Result<(), String> {
     let packaged = fs::read(src_path)
         .map_err(|e| format!("Failed to read encrypted file: {}", e))?;
@@ -109,12 +112,23 @@ pub fn decrypt_file(
     }
 
     // Extract salt, iv and ciphertext
-    let salt = &packaged[4..4 + SALT_SIZE];
+    let file_salt = &packaged[4..4 + SALT_SIZE];
     let iv = &packaged[4 + SALT_SIZE..header_len];
     let ciphertext = &packaged[header_len..];
 
-    // Derive key
-    let key_bytes = derive_key(password, salt)?;
+    // Determine which key to use (Cached key vs fallback calculation)
+    let key_bytes = if let (Some(ckey), Some(csalt)) = (cached_key, cached_salt) {
+        if csalt == file_salt {
+            // Salt matches cached salt: reuse pre-derived key instantly for speed!
+            ckey.to_vec()
+        } else {
+            // Salt mismatch: fallback to derive key dynamically
+            derive_key(password, file_salt)?
+        }
+    } else {
+        derive_key(password, file_salt)?
+    };
+
     let key = Key::<Aes256Gcm>::from_slice(&key_bytes);
     let cipher = Aes256Gcm::new(key);
     let nonce = Nonce::from_slice(iv);
