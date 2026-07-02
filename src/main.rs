@@ -7,7 +7,7 @@ mod archive;
 use clap::{Parser, Subcommand};
 use dialoguer::{theme::ColorfulTheme, Input, Select, MultiSelect, Confirm};
 use console::{style, Style};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use db::DbConnection;
 use config::{AppConfig, RepositoryConfig};
 
@@ -130,21 +130,56 @@ fn main() {
     if config.target_dir.is_empty() {
         println!("Welcome to LoAr (Local Archive)!");
         println!("Let's perform the initial setup first.\n");
-        let target: String = Input::with_theme(&custom_theme())
-            .with_prompt("Enter the absolute path for your central archive folder (somewhere safe)")
-            .validate_with(|input: &String| {
-                let cleaned = input.trim_matches(|c| c == '\'' || c == '"');
-                let path = Path::new(cleaned);
-                if path.is_absolute() {
-                    Ok(())
-                } else {
-                    Err("Please enter a valid absolute path.")
-                }
-            })
-            .interact_text()
-            .unwrap();
+        
+        let final_target_path;
+        loop {
+            let target: String = Input::with_theme(&custom_theme())
+                .with_prompt("Enter the absolute path for your central archive folder (somewhere safe)")
+                .validate_with(|input: &String| {
+                    let cleaned = input.trim_matches(|c| c == '\'' || c == '"');
+                    let path = Path::new(cleaned);
+                    if path.is_absolute() {
+                        Ok(())
+                    } else {
+                        Err("Please enter a valid absolute path.")
+                    }
+                })
+                .interact_text()
+                .unwrap();
 
-        config.target_dir = target.trim_matches(|c| c == '\'' || c == '"').to_string();
+            let cleaned = target.trim_matches(|c| c == '\'' || c == '"');
+            let mut path = PathBuf::from(cleaned);
+            let ends_with_loar = path.file_name()
+                .map(|n| n.to_string_lossy().to_ascii_lowercase() == "loar")
+                .unwrap_or(false);
+            
+            if !ends_with_loar {
+                path.push("LoAr");
+            }
+
+            let target_str = path.to_string_lossy().to_string();
+            if path.exists() && path.is_dir() {
+                println!("\nThe directory '{}' already exists.", target_str);
+                let use_existing = Confirm::with_theme(&custom_theme())
+                    .with_prompt("Do you want to use this existing directory as your archive folder?")
+                    .default(true)
+                    .interact()
+                    .unwrap();
+                
+                if use_existing {
+                    final_target_path = path;
+                    break;
+                } else {
+                    println!("Please enter a different directory.\n");
+                    continue;
+                }
+            } else {
+                final_target_path = path;
+                break;
+            }
+        }
+
+        config.target_dir = final_target_path.to_string_lossy().to_string();
         if let Err(e) = config::save_config(&config) {
             eprintln!("Failed to save initial configuration: {}", e);
             std::process::exit(1);
