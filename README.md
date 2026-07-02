@@ -74,11 +74,26 @@ sudo apt-get install loar
 ```
 
 ### 5. Using Snapcraft (Linux Universal)
-`LoAr` is also published as a Snap package with classic confinement. You can install it on any Snap-supported Linux distribution:
+`LoAr` is published as a Snap package. You can install it on any Snap-supported Linux distribution:
 
 ```bash
-sudo snap install loar --classic
+sudo snap install loar
 ```
+
+> [!IMPORTANT]
+> **Post-installation Setup (Interface Connections)**
+> Because the Snap version runs in a secure sandbox (strict confinement), you must manually connect the required interfaces depending on your usage:
+> 
+> *   **External storage backup/restore** (to access `/media` or `/mnt`):
+>     ```bash
+>     sudo snap connect loar:removable-media
+>     ```
+> *   **Store encryption passwords securely** (OS Keyring integration):
+>     ```bash
+>     sudo snap connect loar:password-manager-service
+>     ```
+> 
+> Note: Standard user folders and nested project directories (including hidden files like `.env`) within your `$HOME` directory are fully accessible out of the box once the `home` interface is connected.
 
 ### 6. Direct Package Downloads (Pre-built Binaries)
 You can directly download the pre-built binaries hosted on Cloudflare R2. Replace `v1.0.28` in the URL with the desired target version if installing a different version.

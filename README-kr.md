@@ -74,11 +74,26 @@ sudo apt-get install loar
 ```
 
 ### 5. Snapcraft 사용 (Linux 공통)
-`LoAr`은 classic confinement 권한을 지닌 스냅 패키지로 공식 등재되어 있습니다. Snap 환경이 완비된 모든 리눅스 배포판에서 아래 명령어로 설치할 수 있습니다:
+`LoAr`은 스냅 패키지로 공식 등재되어 있습니다. Snap 환경이 완비된 모든 리눅스 배포판에서 아래 명령어로 설치할 수 있습니다:
 
 ```bash
-sudo snap install loar --classic
+sudo snap install loar
 ```
+
+> [!IMPORTANT]
+> **스냅 격리(Confinement) 환경 설정 및 후속 설정 안내**
+> 스냅 버전은 보안 샌드박스 내에서 안전하게 격리되어 실행되므로(strict confinement), 필요에 따라 설치 후 아래 인터페이스 연결 명령을 직접 실행해 주셔야 합니다:
+> 
+> *   **외장 하드 및 마운트 경로 백업/복원** (`/media/*` 또는 `/mnt/*` 접근):
+>     ```bash
+>     sudo snap connect loar:removable-media
+>     ```
+> *   **백업 암호화 패스워드의 안전한 저장** (OS 키링 저장소 연동):
+>     ```bash
+>     sudo snap connect loar:password-manager-service
+>     ```
+> 
+> ※ 참고: 사용자의 `$HOME` 디렉토리 내부의 일반 폴더 및 중첩된 개발 프로젝트 폴더(프로젝트 폴더 하위에 위치한 `.env` 등의 숨김 파일 포함)는 인터페이스 연결 과정 없이 즉시 정상적인 백업/복원 읽기·쓰기가 가능합니다.
 
 ### 6. 직접 패키지 다운로드 (빌드된 바이너리)
 Cloudflare R2에 호스팅되는 빌드 완료 바이너리를 직접 다운로드할 수 있습니다. 특정 버전을 다운로드하고 싶으신 경우 URL 내의 `latest` 부분을 해당 버전명(예: `v1.0.43`)으로 변경하여 다운로드하십시오.
