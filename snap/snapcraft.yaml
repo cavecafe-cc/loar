@@ -37,6 +37,8 @@ parts:
     plugin: rust
     source: .
     build-packages:
+      - rustc
+      - cargo
       - pkg-config
       - libdbus-1-dev
     stage-packages:
