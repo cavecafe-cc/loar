@@ -1,7 +1,7 @@
 name: loar
 title: LoAr
 base: core22
-version: '1.0.47'
+version: '1.0.48'
 summary: Local Archive utility
 license: GPL-3.0-only
 contact: https://github.com/cavecafe-cc/loar/issues

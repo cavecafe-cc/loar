@@ -1,6 +1,6 @@
 name: loar
 base: core22
-version: '1.0.47'
+version: '1.0.48'
 summary: Local Archive utility
 architectures:
   - build-on: amd64

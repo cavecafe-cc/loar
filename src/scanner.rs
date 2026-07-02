@@ -12,6 +12,8 @@ const DEFAULT_IGNORE_TEMPLATE: &str = r"# LoAr Default Exclusions
 # OS Metadata
 .DS_Store
 Thumbs.db
+desktop.ini
+ehthumbs.db
 .Spotlight-V100
 .Trashes
 
@@ -23,10 +25,35 @@ obj/
 build/
 dist/
 out/
+__pycache__/
+venv/
+.venv/
+env/
+.gradle/
+.dart_tool/
+vendor/
+.next/
+.nuxt/
+.svelte-kit/
+CMakeFiles/
 *.o
 *.class
 *.exe
 *.dll
+*.pyc
+*.pyo
+
+# Logs & Diagnostics
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Database & Temp Files
+*.tmp
+*.temp
+*.db-shm
+*.db-wal
 
 # Xcode Metadata & Build Artifacts
 DerivedData/
@@ -47,7 +74,6 @@ generated_plugin*
 .vscode/
 *.suo
 *.user
-*.suo
 *.ntvs*
 *.njsproj
 *.sln.docstates
