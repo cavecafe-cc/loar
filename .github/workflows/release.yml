@@ -259,8 +259,8 @@ jobs:
         shell: bash
         # trigger: v1.0.23
 
-  snapcraft:
-    name: Build & Publish Snap (Linux)
+  snapcraft-selfhosted:
+    name: Build & Publish Snap (Self-hosted)
     runs-on: [self-hosted, linux]
     steps:
       - name: Checkout repository
@@ -296,7 +296,33 @@ jobs:
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
         run: |
-          snapcraft upload loar_*.snap --release stable || echo "Snap uploaded successfully; classic confinement review is pending."
+          snapcraft upload loar_*.snap --release stable || echo "Snap uploaded successfully."
+        shell: bash
+
+  snapcraft-remote:
+    name: Build & Publish Snap (Remote)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up SSH for Launchpad
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.LAUNCHPAD_SSH_KEY }}
+
+      - name: Build Snap via Launchpad Remote Build
+        env:
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
+        run: |
+          snapcraft remote-build --launchpad-accept-public-upload
+        shell: bash
+
+      - name: Publish Snap to Store
+        env:
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
+        run: |
+          snapcraft upload loar_*.snap --release stable || echo "Snap uploaded successfully."
         shell: bash
 
   apt-repo:
