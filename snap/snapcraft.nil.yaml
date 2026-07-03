@@ -1,6 +1,6 @@
 name: loar
 base: core22
-version: '1.0.51'
+version: '1.0.52'
 summary: Local Archive utility
 architectures:
   - build-on: amd64
@@ -16,11 +16,15 @@ description: |
   5. Dual Interactive TUI & CLI Modes: Provides an interactive Terminal User Interface (TUI) menu for easy backup and restore management. Supports a fully non-interactive CLI mode suitable for automated cron jobs or scheduler tasks.
 
 grade: stable
-confinement: classic
+confinement: strict
 
 apps:
   loar:
     command: bin/loar
+    plugs:
+      - home
+      - removable-media
+      - password-manager-service
 
 parts:
   loar:
