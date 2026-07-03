@@ -82,13 +82,13 @@ sudo snap install loar
 
 > [!IMPORTANT]
 > **Post-installation Setup (Interface Connections)**
-> Because the Snap version runs in a secure sandbox (strict confinement), you must manually connect the required interfaces depending on your usage:
+> Since the Snap version runs in a secure sandbox, you may need to grant permissions manually depending on your workflow:
 > 
-> *   **External storage backup/restore** (to access `/media` or `/mnt`):
+> *   **To access external storage** (such as `/media` or `/mnt` for backup/restore):
 >     ```bash
 >     sudo snap connect loar:removable-media
 >     ```
-> *   **Store encryption passwords securely** (OS Keyring integration):
+> *   **To store encryption passwords securely** in the OS Keyring:
 >     ```bash
 >     sudo snap connect loar:password-manager-service
 >     ```

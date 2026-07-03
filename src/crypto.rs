@@ -6,23 +6,59 @@ use argon2::Argon2;
 use rand::RngCore;
 use std::fs;
 use std::path::Path;
+use console::style;
 
 const LOAR_MAGIC: &[u8; 4] = b"LOAR";
 const SALT_SIZE: usize = 16;
 const IV_SIZE: usize = 12;
 
+/// Check if the keyring error is caused by Snap confinement restrictions and print guide.
+fn check_keyring_snap_error(err: &keyring::Error) {
+    if std::env::var("SNAP").is_ok() {
+        // NoEntry is a normal condition indicating that the password isn't set yet.
+        // Other errors (like D-Bus errors, communication failures) in Snap mean permission denied.
+        if !matches!(err, keyring::Error::NoEntry) {
+            eprintln!("\n{}", style("snap error:").red().bold());
+            eprintln!("To store encryption passwords securely in the OS Keyring under Snap's sandbox restriction,");
+            eprintln!("please grant permission by running the following command:");
+            eprintln!("\n    {}\n", style("sudo snap connect loar:password-manager-service").yellow().bold());
+            eprintln!("Once connected, you can run loar again.");
+            std::process::exit(1);
+        }
+    }
+}
+
 /// Retrieve stored password from OS keyring for a repository.
 pub fn get_stored_password(repo_name: &str) -> Option<String> {
-    let entry = keyring::Entry::new("loar", repo_name).ok()?;
-    entry.get_password().ok()
+    let entry = match keyring::Entry::new("loar", repo_name) {
+        Ok(e) => e,
+        Err(e) => {
+            check_keyring_snap_error(&e);
+            return None;
+        }
+    };
+    match entry.get_password() {
+        Ok(p) => Some(p),
+        Err(e) => {
+            check_keyring_snap_error(&e);
+            None
+        }
+    }
 }
 
 /// Store password to OS keyring for a repository.
 pub fn store_password(repo_name: &str, password: &str) -> Result<(), String> {
-    let entry = keyring::Entry::new("loar", repo_name)
-        .map_err(|e| format!("Keyring init failed: {}", e))?;
-    entry.set_password(password)
-        .map_err(|e| format!("Keyring save failed: {}", e))?;
+    let entry = match keyring::Entry::new("loar", repo_name) {
+        Ok(e) => e,
+        Err(e) => {
+            check_keyring_snap_error(&e);
+            return Err(format!("Keyring init failed: {}", e));
+        }
+    };
+    if let Err(e) = entry.set_password(password) {
+        check_keyring_snap_error(&e);
+        return Err(format!("Keyring save failed: {}", e));
+    }
     Ok(())
 }
 
@@ -30,7 +66,9 @@ pub fn store_password(repo_name: &str, password: &str) -> Result<(), String> {
 pub fn delete_stored_password(repo_name: &str) -> Result<(), String> {
     if let Ok(entry) = keyring::Entry::new("loar", repo_name) {
         // Delete password from OS keyring. If it does not exist, ignore the error.
-        let _ = entry.delete_credential();
+        if let Err(e) = entry.delete_credential() {
+            check_keyring_snap_error(&e);
+        }
     }
     Ok(())
 }

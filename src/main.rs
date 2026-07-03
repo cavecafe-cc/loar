@@ -35,6 +35,46 @@ fn print_banner() {
     println!("{}", style(banner.trim_matches('\n')).cyan().bold());
 }
 
+/// Check if the error is related to Snap confinement constraints and print help.
+fn check_and_print_snap_error(err_msg: &str, path: Option<&str>) {
+    if std::env::var("SNAP").is_ok() {
+        let err_lower = err_msg.to_lowercase();
+        
+        // 1. Keyring / D-Bus error
+        if err_lower.contains("keyring")
+            || err_lower.contains("dbus")
+            || err_lower.contains("secret-service")
+            || err_lower.contains("secret service")
+            || err_lower.contains("auth")
+        {
+            eprintln!("\n{}", style("snap error:").red().bold());
+            eprintln!("To store encryption passwords securely in the OS Keyring under Snap's sandbox restriction,");
+            eprintln!("please grant permission by running the following command:");
+            eprintln!("\n    {}\n", style("sudo snap connect loar:password-manager-service").yellow().bold());
+            eprintln!("Once connected, you can run loar again.");
+            std::process::exit(1);
+        }
+        
+        // 2. Permission denied on /media or /mnt paths
+        if err_lower.contains("permission denied") || err_lower.contains("permissiondenied") {
+            let is_external = if let Some(p) = path {
+                p.starts_with("/media") || p.starts_with("/mnt")
+            } else {
+                err_lower.contains("/media") || err_lower.contains("/mnt")
+            };
+
+            if is_external {
+                eprintln!("\n{}", style("snap error:").red().bold());
+                eprintln!("To access external storage (/media or /mnt) under Snap's sandbox restriction,");
+                eprintln!("please grant permission by running the following command:");
+                eprintln!("\n    {}\n", style("sudo snap connect loar:removable-media").yellow().bold());
+                eprintln!("Once connected, you can run loar again.");
+                std::process::exit(1);
+            }
+        }
+    }
+}
+
 
 #[derive(Parser)]
 #[command(name = "loar")]
@@ -233,6 +273,7 @@ fn main() {
         Some(Commands::Run { repo, password }) => {
             if let Err(e) = handle_run_cmd(&config, &db, repo.as_deref(), password.as_deref()) {
                 eprintln!("Backup failed: {}", e);
+                check_and_print_snap_error(&e, None);
                 std::process::exit(1);
             }
         }
@@ -240,24 +281,28 @@ fn main() {
             let one_way_sync = !snapshot;
             if let Err(e) = handle_register_cmd(&mut config, &db, &name, &path, encrypt, one_way_sync, password.as_deref()) {
                 eprintln!("Registration failed: {}", e);
+                check_and_print_snap_error(&e, Some(&path));
                 std::process::exit(1);
             }
         }
         Some(Commands::Restore { repo, dest, archive_id, password }) => {
             if let Err(e) = handle_restore_cmd(&config, &db, &repo, &dest, archive_id, password.as_deref()) {
                 eprintln!("Restore failed: {}", e);
+                check_and_print_snap_error(&e, Some(&dest));
                 std::process::exit(1);
             }
         }
         Some(Commands::Status) => {
             if let Err(e) = handle_status_cmd(&db) {
                 eprintln!("Failed to show status: {}", e);
+                check_and_print_snap_error(&e, None);
                 std::process::exit(1);
             }
         }
         Some(Commands::Unregister { repo }) => {
             if let Err(e) = handle_unregister_cmd(&mut config, &db, &repo) {
                 eprintln!("Unregistration failed: {}", e);
+                check_and_print_snap_error(&e, None);
                 std::process::exit(1);
             }
         }
@@ -308,7 +353,10 @@ fn handle_run_cmd(
 
         match archive::run_backup(repo, &config.target_dir, &config.global_exclude, db, pwd.as_deref()) {
             Ok(msg) => println!("Success: {}", msg),
-            Err(e) => eprintln!("Error archiving '{}': {}", repo.name, e),
+            Err(e) => {
+                eprintln!("Error archiving '{}': {}", repo.name, e);
+                check_and_print_snap_error(&e, Some(&repo.path));
+            }
         }
         println!();
     }

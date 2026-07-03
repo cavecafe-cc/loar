@@ -81,14 +81,14 @@ sudo snap install loar
 ```
 
 > [!IMPORTANT]
-> **스냅 격리(Confinement) 환경 설정 및 후속 설정 안내**
-> 스냅 버전은 보안 샌드박스 내에서 안전하게 격리되어 실행되므로(strict confinement), 필요에 따라 설치 후 아래 인터페이스 연결 명령을 직접 실행해 주셔야 합니다:
+> **스냅(Snap) 보안 권한 설정 안내**
+> 스냅 패키지는 안전한 보안 샌드박스 내에서 실행되므로, 사용 환경에 따라 다음 권한 설정 명령어를 실행해 주세요:
 > 
-> *   **외장 하드 및 마운트 경로 백업/복원** (`/media/*` 또는 `/mnt/*` 접근):
+> *   **외장 하드나 마운트 경로 백업/복원 시** (`/media` 또는 `/mnt` 접근 허용):
 >     ```bash
 >     sudo snap connect loar:removable-media
 >     ```
-> *   **백업 암호화 패스워드의 안전한 저장** (OS 키링 저장소 연동):
+> *   **비밀번호를 OS 키링에 안전하게 저장하여 사용 시**:
 >     ```bash
 >     sudo snap connect loar:password-manager-service
 >     ```
