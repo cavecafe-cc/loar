@@ -306,6 +306,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Install Snapcraft
+        run: |
+          sudo snap install snapcraft --classic
+          echo "/snap/bin" >> $GITHUB_PATH
+        shell: bash
+
       - name: Set up SSH for Launchpad
         uses: webfactory/ssh-agent@v0.9.0
         with:
