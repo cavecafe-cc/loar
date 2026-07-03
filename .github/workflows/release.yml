@@ -259,45 +259,45 @@ jobs:
         shell: bash
         # trigger: v1.0.23
 
-  snapcraft-selfhosted:
-    name: Build & Publish Snap (Self-hosted)
-    runs-on: [self-hosted, linux]
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Add cargo to PATH (Linux)
-        run: |
-          RUNNER_USER="${{ vars.RUNNER_USER || 'thomas' }}"
-          echo "/home/${RUNNER_USER}/.cargo/bin" >> $GITHUB_PATH
-        shell: bash
-
-      - name: Set up Rust (Linux)
-        run: |
-          rustup default stable
-        shell: bash
-
-      - name: Build Rust Binary
-        run: |
-          cargo build --release
-        shell: bash
-
-      - name: Use Self-hosted Snapcraft Configuration
-        run: |
-          cp snap/snapcraft.nil.yaml snap/snapcraft.yaml
-        shell: bash
-
-      - name: Build Snap (Destructive Mode)
-        run: |
-          snapcraft --destructive-mode
-        shell: bash
-
-      - name: Publish Snap to Store
-        env:
-          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
-        run: |
-          snapcraft upload loar_*.snap --release stable || echo "Snap uploaded successfully."
-        shell: bash
+#   snapcraft-selfhosted:
+#     name: Build & Publish Snap (Self-hosted)
+#     runs-on: [self-hosted, linux]
+#     steps:
+#       - name: Checkout repository
+#         uses: actions/checkout@v4
+# 
+#       - name: Add cargo to PATH (Linux)
+#         run: |
+#           RUNNER_USER="${{ vars.RUNNER_USER || 'thomas' }}"
+#           echo "/home/${RUNNER_USER}/.cargo/bin" >> $GITHUB_PATH
+#         shell: bash
+# 
+#       - name: Set up Rust (Linux)
+#         run: |
+#           rustup default stable
+#         shell: bash
+# 
+#       - name: Build Rust Binary
+#         run: |
+#           cargo build --release
+#         shell: bash
+# 
+#       - name: Use Self-hosted Snapcraft Configuration
+#         run: |
+#           cp snap/snapcraft.nil.yaml snap/snapcraft.yaml
+#         shell: bash
+# 
+#       - name: Build Snap (Destructive Mode)
+#         run: |
+#           snapcraft --destructive-mode
+#         shell: bash
+# 
+#       - name: Publish Snap to Store
+#         env:
+#           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
+#         run: |
+#           snapcraft upload loar_*.snap --release stable || echo "Snap uploaded successfully."
+#         shell: bash
 
   snapcraft-remote:
     name: Build & Publish Snap (Remote)
@@ -307,6 +307,8 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Snapcraft
+        # Note: --classic is required to install the snapcraft build tool itself on the host runner.
+        # This does NOT define or change the confinement of the target snap package being built (controlled in snapcraft.yaml).
         run: |
           sudo snap install snapcraft --classic
           echo "/snap/bin" >> $GITHUB_PATH
