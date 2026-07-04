@@ -319,6 +319,12 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.LAUNCHPAD_SSH_KEY }}
 
+      - name: Set up Launchpad Credentials
+        run: |
+          mkdir -p ~/.local/share/snapcraft
+          echo "${{ secrets.LAUNCHPAD_CREDENTIALS }}" > ~/.local/share/snapcraft/launchpad-credentials
+        shell: bash
+
       - name: Build Snap via Launchpad Remote Build
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
