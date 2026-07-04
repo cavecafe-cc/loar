@@ -305,6 +305,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Install Snapcraft
         # Note: --classic is required to install the snapcraft build tool itself on the host runner.
