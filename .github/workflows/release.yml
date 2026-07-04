@@ -338,7 +338,9 @@ jobs:
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
         run: |
-          snapcraft upload loar_*.snap --release stable || echo "Snap uploaded successfully."
+          for snap in loar_*.snap; do
+            snapcraft upload "$snap" --release stable
+          done
         shell: bash
 
   apt-repo:
